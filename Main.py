@@ -1,21 +1,26 @@
 
 # Wobbling Wally Wrecks Welland
 
-# ver 0
+# ver 0/01 #added colorama so game could be compiled into a Windows executable file
 
 print("Wobbling Wally Wrecks Welland\n\n")
 
-COLOUR_CYAN = "\033[96m"       # Bright Cyan
-COLOUR_RESET = "\033[0m"       # Resets all colour formatting
-COLOUR_RED = "\033[91m"        # Bright Red (for monster attack messages)
-COLOUR_GREEN = "\033[92m"      #successful attack
+# Import Colorama and initialize it
+from colorama import Fore, Style, init
+init() # Initialize Colorama for Windows compatibility.
+
+COLOUR_CYAN = Fore.CYAN
+COLOUR_RESET = Style.RESET_ALL
+COLOUR_RED = Fore.RED          # Bright Red (for monster attack messages)
+COLOUR_GREEN = Fore.GREEN      # Successful attack
 
 from help import help
 from help import map
 from Character import Character
 from Move import LOCATIONS
 from Move import MAP_CONNECTIONS
-import random #
+import random
+import time
 current_location_id = 1
 
 
@@ -41,14 +46,19 @@ def monster_attacks(monster_data, player_char):
     # If strength is 0 or less, damage will be 0 (a special "too weak" case).
     if monster_data['strength'] <= 0:
         damage = 0
-        print(f"The {monster_data['type']} tries to hit you, but it's too weak to cause any damage!")
+        print(f"The {monster_data['type']} tries to hit you...")
+        time.sleep(1)
+        print(" but it's too weak to cause any damage!")
     else:
-        damage = random.randint(1, monster_data['strength'] // 2)  # Random value from 1 to strength
+        # Note: As per your provided code, damage is 1 to HALF of monster's strength here.
+        # If you meant to use full strength, remove the '// 2'.
+        damage = random.randint(1, monster_data['strength'] // 2)
 
     # Apply damage only if it's greater than 0
     if damage > 0:
         player_char.hitpoints -= damage
-        print(f"You take {damage} damage! Your HP: {player_char.hitpoints}/{player_char.max_hitpoints}")
+        time.sleep(1)
+        print(f"You take {damage} damage! You now have {player_char.hitpoints} out of {player_char.max_hitpoints} hitpoints.")
     # The 'else' case (damage is 0) is already handled by the "too weak" print above, so no new print here.
 
     if player_char.hitpoints <= 0:
@@ -64,6 +74,8 @@ def monster_attacks(monster_data, player_char):
         print(f"You find yourself back at Hooker Street, feeling refreshed ({player_char.hitpoints} HP).")
 
         return True  # Indicate that Wally "died" and respawned (game continues)
+    else: # <-- This else block ensures a return False if Wally survives
+        return False # Indicate that Wally is still alive after the attack (game continues normally)
 
 
 # --- Main Game Loop ---
@@ -93,6 +105,7 @@ def run_perpetually():
 
             wally_damage = Wally.attack()
             monster_in_room['hitpoints'] -= wally_damage
+            time.sleep(1)
 
             print(f"You strike the {monster_in_room['type']} with your {Wally.weapon} for {wally_damage} damage!")
 
@@ -124,7 +137,7 @@ def run_perpetually():
 
                 if Wally.hitpoints > old_wally_hp:
                     print(
-                        f"\nYou move {user_move.upper()}. Feeling refreshed, your hitpoints are restored to {Wally.hitpoints}.")
+                        f"\nYou move {user_move.upper()}. You feel refreshed.")
                 else:
                     # If HP was already max, just print the move message
                     print(f"\nYou move {user_move.upper()}.")
@@ -155,6 +168,7 @@ def run_perpetually():
                     continue
 
             if user_move == "?":
+                # FIXED TYPO: changed '.in' to '.join'
                 print("\n" + ", ".join(help))
             elif user_move == "m":
                 print("\n--- Map ---")
@@ -176,7 +190,7 @@ def run_perpetually():
                 if monster_in_room:
                     if monster_in_room["is_alive"]:
                         print(
-                            f"  A {monster_in_room['type']} is eyeing you. It is armed with {monster_in_room['weapon']}.")
+                            f"  A {monster_in_room['type']} is eyeing you. They are armed with {monster_in_room['weapon']}.")
                         if monster_in_room['hitpoints'] < monster_in_room['max_hitpoints']:
                             print(f"  It has {monster_in_room['hitpoints']} HP remaining.")
                     else:
